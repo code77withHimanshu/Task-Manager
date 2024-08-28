@@ -232,7 +232,7 @@ function Dashboard() {
                             >
                               <Typography variant="body1" fontWeight="bold">{task.title}</Typography>
                               <Typography variant="body2">{task.description}</Typography>
-                              <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.6rem' }}>Due Date: {new Date(task.dueDate).toLocaleDateString()}</Typography>
+                              <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.6rem' }}>Due Date: {new Date(task.dueDate).toLocaleDateString()} {new Date(task.dueDate).toLocaleTimeString()}</Typography>
                               <Typography variant="body2" sx={{ fontSize: '0.6rem' }}>CreatedAt: {new Date(task.createdAt).toLocaleDateString()} {new Date(task.createdAt).toLocaleTimeString()}</Typography>
                               <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 1 }}>
                                 <Tooltip title="Edit" arrow>

@@ -57,7 +57,7 @@ const TaskModal = ({ open, handleClose, fetchTasks }) => {
         <TextField
           label="Due Date"
           variant="outlined"
-          type="date"
+          type="datetime-local"
           fullWidth
           margin="normal"
           value={dueDate}

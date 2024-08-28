@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Box, Typography, TextField, Button } from '@mui/material';
+import { Modal, Box, Typography, TextField, Button, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -7,6 +7,7 @@ function TaskUpdateModal({ task, open, handleClose, fetchTasks }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [reminder, setReminder] = useState('None'); // State for reminder option
   const { user } = useAuth();
   const token = localStorage.getItem('token');
 
@@ -14,14 +15,15 @@ function TaskUpdateModal({ task, open, handleClose, fetchTasks }) {
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
-      setDueDate(new Date(task.dueDate).toISOString().split('T')[0]);
+      setDueDate(new Date(task.dueDate).toISOString().slice(0, 16)); // Format for datetime-local
+      setReminder(task.reminder || 'None'); // Initialize reminder from task
     }
   }, [task]);
 
   const handleSubmit = async () => {
     if (title.trim()) {
       try {
-        const updatedTask = { title, description, dueDate, column: task.column };
+        const updatedTask = { title, description, dueDate, reminder, column: task.column };
         await axios.put(`http://localhost:5000/api/tasks/${task._id}`, updatedTask, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -58,13 +60,31 @@ function TaskUpdateModal({ task, open, handleClose, fetchTasks }) {
         <TextField
           label="Due Date"
           variant="outlined"
-          type="date"
+          type="datetime-local"
           fullWidth
           margin="normal"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           InputLabelProps={{ shrink: true }}
         />
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Set Due Date Reminder</InputLabel>
+          <Select
+            value={reminder}
+            onChange={(e) => setReminder(e.target.value)}
+            label="Set Due Date Reminder"
+          >
+            <MenuItem value="None">None</MenuItem>
+            <MenuItem value="At time of due date">At time of due date</MenuItem>
+            <MenuItem value="5 minutes before">5 minutes before</MenuItem>
+            <MenuItem value="10 minutes before">10 minutes before</MenuItem>
+            <MenuItem value="15 minutes before">15 minutes before</MenuItem>
+            <MenuItem value="1 hour before">1 hour before</MenuItem>
+            <MenuItem value="2 hours before">2 hours before</MenuItem>
+            <MenuItem value="1 day before">1 day before</MenuItem>
+            <MenuItem value="2 days before">2 days before</MenuItem>
+          </Select>
+        </FormControl>
         <Box sx={{ marginTop: 3, textAlign: 'right' }}>
           <Button onClick={handleSubmit} variant="contained" color="primary">
             Save Changes

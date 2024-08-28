@@ -17,7 +17,10 @@ function TaskDetailsModal({ task, open, handleClose }) {
           Created At: {new Date(task.createdAt).toLocaleDateString()} {new Date(task.createdAt).toLocaleTimeString()}
         </Typography>
         <Typography variant="body2" sx={{ marginTop: 1 }}>
-          Due Date: {new Date(task.dueDate).toLocaleDateString()}
+          Due Date: {new Date(task.dueDate).toLocaleDateString()} {new Date(task.dueDate).toLocaleTimeString()}
+        </Typography>
+        <Typography variant="body2" sx={{ marginTop: 1 }}>
+          Reminder: {task.reminder}
         </Typography>
         <Box sx={{ marginTop: 3, textAlign: 'right' }}>
           <Button onClick={handleClose} variant="contained" color="primary">
