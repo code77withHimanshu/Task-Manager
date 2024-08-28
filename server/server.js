@@ -1,4 +1,8 @@
 const express = require('express');
+const cron = require('node-cron');
+const socketIo = require('socket.io');
+const server = http.createServer(app);
+const io = socketIo(server);
 const mongoose = require('mongoose');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -23,6 +27,7 @@ const taskSchema = new mongoose.Schema({
   description: String,
   createdAt: { type: Date, default: Date.now },
   dueDate: Date,
+  reminder: String,
   column: String,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { collection: 'Tasks' });
@@ -196,6 +201,7 @@ app.post('/api/tasks', authenticateJWT, async (req, res) => {
       title,
       description,
       dueDate,
+      reminder: "None",
       column,
       userId: req.user.id // The ID of the authenticated user
     });
@@ -208,12 +214,12 @@ app.post('/api/tasks', authenticateJWT, async (req, res) => {
 });
 
 app.put('/api/tasks/:id', authenticateJWT, async (req, res) => {
-  const { title, description, dueDate, column } = req.body;
+  const { title, description, dueDate, reminder, column } = req.body;
   console.log('Updating Task ID:', req.params.id);
   console.log('Request Body:', req.body);
 
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, { title, description, dueDate, column }, { new: true });
+    const task = await Task.findByIdAndUpdate(req.params.id, { title, description, dueDate, reminder, column }, { new: true });
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
