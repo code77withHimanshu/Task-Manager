@@ -7,8 +7,11 @@ import { GoogleLogin } from '@react-oauth/google';
 
 function Login() {
   const [email, setEmail] = useState('');
+  const [googleId, setGoogleId] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth(); 
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,11 +25,53 @@ function Login() {
     }
   };
 
-  const handleGoogleSuccess = (response) => {
-    console.log(response);
-    navigate('/dashboard');
-    // Handle Google login logic here
+  // const handleGoogleSuccess = (response) => {
+  //   console.log(response);
+  //   navigate('/dashboard');
+  //   // Handle Google login logic here
+  // };
+
+  const handleGoogleSuccess = async (response) => {
+    try {
+      const token = response.credential;
+      
+      // Send token to your backend to handle Google login
+      const googleResponse = await axios.post('http://localhost:5000/api/google-login', { token });
+      
+      // Store the JWT token in localStorage
+      localStorage.setItem('token', googleResponse.data.token);
+      
+      // Get the current user details using the stored token
+      const userResponse = await axios.get('http://localhost:5000/auth/current_user', {
+        headers: {
+          Authorization: `Bearer ${googleResponse.data.token}`, // Include token in the request header
+        },
+      });
+      console.log(userResponse);
+      
+      // Set user details in the AuthContext
+      const user = {
+
+        googleId: userResponse.data.id,
+        email: userResponse.data.email,
+        name: userResponse.data.name,
+      };
+      setEmail(userResponse.data.email);
+      setUser(user); // Set the user in the context
+      
+      await axios.post('http://localhost:5000/api/google-register', user);
+      const response1 = await axios.post('http://localhost:5000/id', { email: user.email });
+      console.log("Id:", response1.data.id); 
+      const id = response1.data.id;
+      user.id = response1.data.id;
+      setUser(user);
+      // Navigate to the dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Google login failed', error);
+    }
   };
+  
 
   const handleGoogleFailure = (error) => {
     console.error('Google login failed', error);
