@@ -8,6 +8,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const cron = require('node-cron'); // Import node-cron
 const nodemailer = require('nodemailer'); // Import nodemailer for sending email notifications
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client("486880569229-te48aevb35vql663i8rn8dshhb5m9enn.apps.googleusercontent.com");
 
 // Define User model
 const userSchema = new mongoose.Schema({
@@ -157,7 +159,7 @@ app.get('/auth/google', passport.authenticate('google', {
 
 app.get('/auth/google/callback', passport.authenticate('google'), (req, res) => {
   const token = jwt.sign({ id: req.user.id, email: req.user.email }, JWT_SECRET, { expiresIn: '1h' });
-  res.redirect(`http://localhost:3001/dashboard?token=${token}`);
+  res.redirect(`http://localhost:3000/dashboard`);
 });
 
 app.get('/auth/logout', (req, res) => {
@@ -167,6 +169,33 @@ app.get('/auth/logout', (req, res) => {
 app.get('/auth/current_user', authenticateJWT, (req, res) => {
   res.json(req.user);
 });
+
+app.post('/api/google-login', async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: "486880569229-te48aevb35vql663i8rn8dshhb5m9enn.apps.googleusercontent.com"
+    });
+
+    const { sub: googleId, email, name } = ticket.getPayload();
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      user = new User({ googleId, email, name });
+      await user.save();
+    }
+
+    const jwtToken = jwt.sign({ id: user._id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ token: jwtToken });
+  } catch (error) {
+    console.error('Google login failed', error);
+    res.status(500).json({ message: 'Google login failed' });
+  }
+});
+
 
 // User Registration
 app.post('/api/register', async (req, res) => {
@@ -181,6 +210,31 @@ app.post('/api/register', async (req, res) => {
       name: `${firstName} ${lastName}`,
       email,
       passwordHash: hashedPassword
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error registering user', error });
+  }
+});
+
+app.post('/api/google-register', async (req, res) => {
+  const { googleId, name, email } = req.body;
+
+  try {
+    // Check if a user with the same googleId already exists
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(201).json({ message: 'Email Id already exists' });
+    }
+
+    // If no existing user, proceed with registration
+    const newUser = new User({
+      googleId,
+      name,
+      email
     });
 
     await newUser.save();
@@ -209,6 +263,37 @@ app.post('/api/login', async (req, res) => {
     res.status(200).json({ token, user });
   } catch (error) {
     res.status(500).json({ message: 'Error logging in', error });
+  }
+});
+
+app.post('/api/google-login', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email' });
+    }
+
+    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+    res.status(200).json({ token, user });
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in', error });
+  }
+});
+
+app.post('/id', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email' });
+    }
+
+    res.status(200).json({ id: user._id }); // Return the user ID wrapped in an object
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving user ID', error });
   }
 });
 
