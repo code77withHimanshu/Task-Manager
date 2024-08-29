@@ -8,7 +8,7 @@ Clone the repository and open in VS code.
 ### Step-2
 Open the terminal and write the following commands
 
-'cd .\server\'
+***cd .\server\***
 npm install
 node server.js
 
