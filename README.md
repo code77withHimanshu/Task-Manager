@@ -8,9 +8,9 @@ Clone the repository and open in VS code.
 ### Step-2
 Open the terminal and write the following commands
 
-_cd .\server\_
-npm install
-node server.js
+`cd .\server\`
+`npm install`
+`node server.js`
 
 This will run the server on the local and you will see MongoDB connected
 
@@ -18,9 +18,9 @@ This will run the server on the local and you will see MongoDB connected
 ### Step-3
 Open another terminal and write the following commands
 
-cd .\task-manager\
-npm install
-npm start
+`cd .\task-manager\`
+`npm install`
+`npm start`
 
 This will start the frontend on the local
 
